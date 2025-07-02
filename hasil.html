@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Hasil Pencarian PLN Ngunut</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <style>
+    body {
+      background: #f1f3f5;
+    }
+    .result-box {
+      background: #fff;
+      padding: 30px;
+      border-radius: 15px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      margin-top: 60px;
+      animation: fadeIn 0.6s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .badge-status {
+      font-size: 1rem;
+      padding: 5px 10px;
+    }
+    .back-btn {
+      margin-top: 25px;
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">🔌 PLN Ngunut</a>
+    </div>
+  </nav>
+
+  <div class="container">
+    <div class="result-box mx-auto mt-5 col-md-8 col-lg-6 text-center">
+      <h3 class="mb-4 text-primary">Hasil Pencarian</h3>
+      <div id="hasil">Memuat data...</div>
+      <div class="back-btn">
+        <a href="index.html" class="btn btn-secondary">🔙 Kembali ke Pencarian</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const query = new URLSearchParams(window.location.search).get('query');
+    const hasilDiv = document.getElementById("hasil");
+    const spreadsheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2MfnlYP2CP30zS1HT_2osVQZ2TazolhWWxLVnjtQZlReai-ldrznjzkesLaJ3dzQcWKY3j3YjAmNy/gviz/tq?tqx=out:json";
+
+    fetch(spreadsheetURL)
+      .then(res => res.text())
+      .then(data => {
+        const json = JSON.parse(data.substr(47).slice(0, -2));
+        const rows = json.table.rows;
+        let found = false;
+        for (const row of rows) {
+          const idPelanggan = row.c[0]?.v?.toString().trim();
+          const nama = row.c[1]?.v || '-';
+          const alamat = row.c[2]?.v || '-';
+          const status = row.c[3]?.v || '-';
+          const waktu = row.c[4]?.v || '-';
+          if (idPelanggan === query) {
+            const badgeColor = status.toLowerCase().includes("padam") ? "danger" : "success";
+            hasilDiv.innerHTML = `
+              <div class="mb-3"><strong>ID Pelanggan:</strong><br> ${idPelanggan}</div>
+              <div class="mb-3"><strong>Nama:</strong><br> ${nama}</div>
+              <div class="mb-3"><strong>Alamat:</strong><br> ${alamat}</div>
+              <div class="mb-3"><strong>Status:</strong><br> 
+                <span class="badge bg-${badgeColor} badge-status">${status}</span>
+              </div>
+              <div class="mb-3"><strong>Waktu:</strong><br> ${waktu}</div>
+            `;
+            found = true;
+            break;
+          }
+        }
+        if (!found) {
+          hasilDiv.innerHTML = `<div class="alert alert-warning">Data tidak ditemukan untuk ID: <strong>${query}</strong></div>`;
+        }
+      })
+      .catch(err => {
+        console.error(err);
+        hasilDiv.innerHTML = `<div class="alert alert-danger">Gagal mengambil data. Coba beberapa saat lagi.</div>`;
+      });
+  </script>
+</body>
+</html>
