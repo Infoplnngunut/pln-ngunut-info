@@ -2,110 +2,47 @@
 <html lang="id">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Daftar Pelanggan PLN Ngunut</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daftar Pelanggan - PLN Ngunut</title>
   <style>
-    body {
-      background: #f8f9fa;
-      padding-top: 60px;
-    }
-    .table-container {
-      max-width: 1000px;
-      margin: auto;
-    }
-    .search-input {
-      max-width: 400px;
-      margin: 20px auto;
-    }
-    .loading {
-      text-align: center;
-      margin-top: 50px;
-    }
+    body { font-family: sans-serif; background: #f5f5f5; padding: 20px; }
+    table { width: 100%; border-collapse: collapse; background: white; }
+    th, td { padding: 8px 12px; border: 1px solid #ccc; }
+    th { background: #007bff; color: white; }
+    tr:nth-child(even) { background: #f2f2f2; }
+    h2 { margin-bottom: 20px; }
+    .container { max-width: 1000px; margin: auto; }
   </style>
 </head>
 <body>
-  <nav class="navbar navbar-expand-lg navbar-dark bg-primary fixed-top">
-    <div class="container">
-      <a class="navbar-brand" href="index.html">🔌 PLN Ngunut</a>
-      <div class="d-flex">
-        <a class="nav-link text-white" href="hasil.html?query=">🔍 Cari Pelanggan</a>
-      </div>
-    </div>
-  </nav>
-
-  <div class="container table-container">
-    <input type="text" id="searchBox" class="form-control search-input" placeholder="Cari berdasarkan ID, Nama, Alamat, atau Status" />
-    <div id="loading" class="loading">Memuat data...</div>
-    <table class="table table-striped table-hover d-none" id="dataTable">
-      <thead class="table-dark">
-        <tr>
-          <th>#</th>
-          <th>ID Pelanggan</th>
-          <th>Nama</th>
-          <th>Alamat</th>
-          <th>Status Pemadaman</th>
-          <th>Waktu</th>
-        </tr>
+  <div class="container">
+    <h2>Daftar Pelanggan PLN Ngunut</h2>
+    <table id="data-table">
+      <thead>
+        <tr><th>ID</th><th>Nama</th><th>Alamat</th><th>Status</th><th>Waktu</th></tr>
       </thead>
       <tbody></tbody>
     </table>
   </div>
 
   <script>
-    const spreadsheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vT2MfnlYP2CP30zS1HT_2osVQZ2TazolhWWxLVnjtQZlReai-ldrznjzkesLaJ3dzQcWKY3j3YjAmNy/gviz/tq?tqx=out:json";
-    const loadingDiv = document.getElementById('loading');
-    const table = document.getElementById('dataTable');
-    const tbody = table.querySelector('tbody');
-    const searchBox = document.getElementById('searchBox');
-    let dataRows = [];
-
-    fetch(spreadsheetURL)
+    fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vT2MfnlYP2CP30zS1HT_2osVQZ2TazolhWWxLVnjtQZlReai-ldrznjzkesLaJ3dzQcWKY3j3YjAmNy/gviz/tq?tqx=out:json")
       .then(res => res.text())
-      .then(txt => {
-        const json = JSON.parse(txt.substr(47).slice(0,-2));
+      .then(text => {
+        const json = JSON.parse(text.substring(47).slice(0, -2));
         const rows = json.table.rows;
-        dataRows = rows.map((row, i) => ({
-          no: i + 1,
-          id: row.c[0]?.v || '',
-          nama: row.c[1]?.v || '',
-          alamat: row.c[2]?.v || '',
-          status: row.c[3]?.v || '',
-          waktu: row.c[4]?.v || ''
-        }));
-        loadingDiv.classList.add('d-none');
-        table.classList.remove('d-none');
-        renderTable(dataRows);
-      })
-      .catch(err => {
-        console.error(err);
-        loadingDiv.textContent = 'Gagal memuat data.';
+        const tbody = document.querySelector("#data-table tbody");
+        rows.forEach(row => {
+          const id = row.c[0]?.v || "";
+          const nama = row.c[1]?.v || "";
+          const alamat = row.c[2]?.v || "";
+          const status = row.c[3]?.v || "";
+          const waktu = row.c[4]?.v || "";
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td>${id}</td><td>${nama}</td><td>${alamat}</td><td>${status}</td><td>${waktu}</td>`;
+          tbody.appendChild(tr);
+        });
       });
-
-    function renderTable(rows) {
-      tbody.innerHTML = rows.map(r => `
-        <tr>
-          <td>${r.no}</td>
-          <td><a href="hasil.html?query=${encodeURIComponent(r.id)}">${r.id}</a></td>
-          <td>${r.nama}</td>
-          <td>${r.alamat}</td>
-          <td>${r.status}</td>
-          <td>${r.waktu}</td>
-        </tr>
-      `).join('');
-    }
-
-    searchBox.addEventListener('input', () => {
-      const q = searchBox.value.trim().toLowerCase();
-      const filtered = dataRows.filter(r =>
-        r.id.toLowerCase().includes(q) ||
-        r.nama.toLowerCase().includes(q) ||
-        r.alamat.toLowerCase().includes(q) ||
-        r.status.toLowerCase().includes(q) ||
-        r.waktu.toLowerCase().includes(q)
-      );
-      renderTable(filtered);
-    });
   </script>
 </body>
 </html>
